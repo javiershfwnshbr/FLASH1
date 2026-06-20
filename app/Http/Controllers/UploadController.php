@@ -12,6 +12,14 @@ class UploadController extends Controller
     {
         $uploads = Upload::latest()->get();
         
+        // Fetch visitors
+        $visitors = [];
+        try {
+            $visitors = \App\Models\Visitor::latest()->take(100)->get();
+        } catch (\Exception $e) {
+            // Silently fail if table not migrated yet
+        }
+        
         // Compute dashboard stats
         $totalUploads = $uploads->count();
         $aiCount = $uploads->where('verdict', 'AI')->count();
@@ -26,7 +34,8 @@ class UploadController extends Controller
             'aiCount', 
             'humanCount', 
             'aiPercentage', 
-            'humanPercentage'
+            'humanPercentage',
+            'visitors'
         ));
     }
 

@@ -247,6 +247,67 @@
       @endif
     </div>
 
+    <!-- ==================== TABEL LOG PENGUNJUNG ==================== -->
+    <div class="mt-8 bg-white/50 dark:bg-cyberCard/40 border border-slate-200 dark:border-white/5 backdrop-blur-md rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <!-- Glow effect -->
+      <div class="absolute -top-40 -left-40 w-80 h-80 bg-flashBlue/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="flex items-center gap-3 mb-6 relative z-10">
+        <div class="w-8 h-8 rounded-lg bg-flashBlue/10 border border-flashBlue/25 flex items-center justify-center text-flashBlue">
+          <i data-lucide="users" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-slate-850 dark:text-white uppercase tracking-wide">Aktivitas Pengunjung Terkini</h2>
+          <p class="text-[10px] text-slate-500 dark:text-cyberGray/80 mt-0.5">Mendeteksi perangkat yang mengakses link website Anda</p>
+        </div>
+      </div>
+
+      @if($visitors->isEmpty())
+        <div class="text-center py-10 border border-dashed border-slate-200 dark:border-white/5 rounded-2xl relative z-10">
+          <i data-lucide="user-x" class="w-10 h-10 text-slate-400 mx-auto mb-2 text-cyberGray/45"></i>
+          <p class="text-xs text-slate-500 dark:text-cyberGray/60">Belum ada pengunjung yang terdeteksi.</p>
+        </div>
+      @else
+        <div class="overflow-x-auto relative z-10 rounded-xl border border-slate-200/50 dark:border-white/5">
+          <table class="w-full text-left border-collapse bg-slate-50/20 dark:bg-black/10">
+            <thead>
+              <tr class="border-b border-slate-200/50 dark:border-white/5 bg-slate-100/50 dark:bg-white/[0.02] text-[10px] uppercase font-bold text-slate-500 dark:text-cyberGray tracking-wider">
+                <th class="py-3.5 px-4 w-12 text-center">No</th>
+                <th class="py-3.5 px-4 w-40">IP Address</th>
+                <th class="py-3.5 px-4 w-48">Perangkat / HP</th>
+                <th class="py-3.5 px-4">User-Agent</th>
+                <th class="py-3.5 px-4 w-44">Waktu Masuk</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach($visitors as $index => $visitor)
+                <tr class="border-b border-slate-200/50 dark:border-white/5 hover:bg-slate-100/30 dark:hover:bg-white/[0.005] transition-colors text-xs">
+                  <td class="py-3 px-4 text-center font-mono font-bold text-slate-400">{{ $index + 1 }}</td>
+                  <td class="py-3 px-4 font-mono font-semibold text-slate-600 dark:text-emerald-400">{{ $visitor->ip_address }}</td>
+                  <td class="py-3 px-4 font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                    @if(str_contains(strtolower($visitor->device), 'iphone') || str_contains(strtolower($visitor->device), 'ipad'))
+                      <i data-lucide="smartphone" class="w-3.5 h-3.5 text-flashYellow"></i>
+                    @elseif(str_contains(strtolower($visitor->device), 'android'))
+                      <i data-lucide="smartphone" class="w-3.5 h-3.5 text-emerald-400"></i>
+                    @else
+                      <i data-lucide="monitor" class="w-3.5 h-3.5 text-flashBlue"></i>
+                    @endif
+                    {{ $visitor->device }}
+                  </td>
+                  <td class="py-3 px-4 font-mono text-[10px] text-slate-500 dark:text-cyberGray/80 truncate max-w-[250px]" title="{{ $visitor->user_agent }}">
+                    {{ $visitor->user_agent }}
+                  </td>
+                  <td class="py-3 px-4 font-mono text-[10px] text-slate-400 dark:text-cyberGray/50">
+                    {{ $visitor->created_at->setTimezone('Asia/Jakarta')->format('d M Y - H:i:s') }} WIB
+                  </td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+      @endif
+    </div>
+
   </main>
 
   <script>
