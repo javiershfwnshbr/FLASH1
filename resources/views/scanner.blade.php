@@ -256,10 +256,7 @@
         <i data-lucide="settings" class="w-4 h-4"></i>
       </button>
 
-      <!-- Admin Dashboard Link -->
-      <a href="{{ route('admin.dashboard') }}" class="p-2.5 rounded-xl bg-white/70 dark:bg-cyberCard/80 text-slate-600 dark:text-cyberGray hover:text-slate-900 dark:hover:text-white transition-all border border-slate-200 dark:border-white/5" title="Dashboard Admin">
-        <i data-lucide="shield" class="w-4 h-4"></i>
-      </a>
+
     </div>
   </header>
 
