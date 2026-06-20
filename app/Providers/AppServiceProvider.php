@@ -19,6 +19,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // If running on Vercel and using SQLite, automatically create the database file and migrate it
+        if (env('RUNNING_ON_VERCEL') || env('VERCEL') || isset($_SERVER['VERCEL'])) {
+            if (config('database.default') === 'sqlite') {
+                $dbPath = config('database.connections.sqlite.database');
+                if ($dbPath && !file_exists($dbPath)) {
+                    $dir = dirname($dbPath);
+                    if (!is_dir($dir)) {
+                        mkdir($dir, 0755, true);
+                    }
+                    touch($dbPath);
+                    
+                    try {
+                        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                        \Illuminate\Support\Facades\Log::info('Vercel SQLite: Database created and migrated successfully.');
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Vercel SQLite Migration Failed: ' . $e->getMessage());
+                    }
+                }
+            }
+        }
     }
 }
