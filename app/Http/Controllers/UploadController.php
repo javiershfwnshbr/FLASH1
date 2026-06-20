@@ -32,60 +32,70 @@ class UploadController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'image' => 'required|image|max:10240', // Max 10MB
-            'filename' => 'required|string',
-            'filesize' => 'required|string',
-            'resolution' => 'required|string',
-            'verdict' => 'required|string',
-            'ai_score' => 'required|numeric',
-        ]);
-
-        if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $originalName = $file->getClientOriginalName();
-            
-            // Create uploads folder
-            $uploadPath = public_path('uploads');
-            $isVercel = env('RUNNING_ON_VERCEL') || env('VERCEL') || isset($_SERVER['VERCEL']);
-            if ($isVercel) {
-                $uploadPath = '/tmp/uploads';
-            }
-
-            if (!File::exists($uploadPath)) {
-                File::makeDirectory($uploadPath, 0755, true);
-            }
-
-            // Save image with unique filename
-            $filename = time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
-            $file->move($uploadPath, $filename);
-
-            // Log upload data to SQLite database
-            $upload = Upload::create([
-                'filename' => $filename,
-                'original_name' => $originalName,
-                'filesize' => $request->input('filesize'),
-                'resolution' => $request->input('resolution'),
-                'verdict' => $request->input('verdict'),
-                'ai_score' => $request->input('ai_score'),
-                'camera_model' => $request->input('camera_model', '-'),
-                'date_taken' => $request->input('date_taken', '-'),
-                'time_taken' => $request->input('time_taken', '-'),
-                'gps_coordinates' => $request->input('gps', '-'),
-                'social_media' => $request->input('social_media', '-'),
+        try {
+            $request->validate([
+                'image' => 'required|image|max:10240', // Max 10MB
+                'filename' => 'required|string',
+                'filesize' => 'required|string',
+                'resolution' => 'required|string',
+                'verdict' => 'required|string',
+                'ai_score' => 'required|numeric',
             ]);
+
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $originalName = $file->getClientOriginalName();
+                
+                // Create uploads folder
+                $uploadPath = public_path('uploads');
+                $isVercel = env('RUNNING_ON_VERCEL') || env('VERCEL') || isset($_SERVER['VERCEL']);
+                if ($isVercel) {
+                    $uploadPath = '/tmp/uploads';
+                }
+
+                if (!File::exists($uploadPath)) {
+                    File::makeDirectory($uploadPath, 0755, true);
+                }
+
+                // Save image with unique filename
+                $filename = time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
+                $file->move($uploadPath, $filename);
+
+                // Log upload data to SQLite database
+                $upload = Upload::create([
+                    'filename' => $filename,
+                    'original_name' => $originalName,
+                    'filesize' => $request->input('filesize'),
+                    'resolution' => $request->input('resolution'),
+                    'verdict' => $request->input('verdict'),
+                    'ai_score' => $request->input('ai_score'),
+                    'camera_model' => $request->input('camera_model', '-'),
+                    'date_taken' => $request->input('date_taken', '-'),
+                    'time_taken' => $request->input('time_taken', '-'),
+                    'gps_coordinates' => $request->input('gps', '-'),
+                    'social_media' => $request->input('social_media', '-'),
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Upload saved successfully!',
+                    'data' => $upload
+                ]);
+            }
 
             return response()->json([
-                'success' => true,
-                'message' => 'Upload saved successfully!',
-                'data' => $upload
-            ]);
+                'success' => false,
+                'message' => 'Failed to upload image: No file found in request.'
+            ], 400);
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Upload Controller Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Server Error: ' . $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to upload image.'
-        ], 400);
     }
 
     public function destroy($id)

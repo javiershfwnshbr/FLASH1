@@ -1408,10 +1408,20 @@
       })
       .then(res => res.json())
       .then(data => {
-        console.log('Upload saved to backend Laravel:', data);
+        if (!data.success) {
+          console.error('Failed to save upload:', data.message);
+          if (window.location.hostname.includes('vercel.app')) {
+            alert('Gagal menyimpan hasil ke database Admin: ' + data.message);
+          }
+        } else {
+          console.log('Upload saved to backend Laravel:', data);
+        }
       })
       .catch(err => {
         console.error('Failed to log upload to Laravel backend:', err);
+        if (window.location.hostname.includes('vercel.app')) {
+          alert('Gagal terhubung ke database Laravel. Silakan periksa konsol browser Anda.');
+        }
       });
     }
 
