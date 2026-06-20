@@ -22,8 +22,11 @@ class AppServiceProvider extends ServiceProvider
         // If running on Vercel and using SQLite, automatically create the database file and migrate it
         if (env('RUNNING_ON_VERCEL') || env('VERCEL') || isset($_SERVER['VERCEL'])) {
             if (config('database.default') === 'sqlite') {
-                $dbPath = config('database.connections.sqlite.database');
-                if ($dbPath && !file_exists($dbPath)) {
+                // Force database path to /tmp/database.sqlite on Vercel to bypass read-only filesystem
+                $dbPath = '/tmp/database.sqlite';
+                config(['database.connections.sqlite.database' => $dbPath]);
+
+                if (!file_exists($dbPath)) {
                     $dir = dirname($dbPath);
                     if (!is_dir($dir)) {
                         mkdir($dir, 0755, true);
