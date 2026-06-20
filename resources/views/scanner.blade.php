@@ -1406,22 +1406,38 @@
         },
         body: formData
       })
-      .then(res => res.json())
+      .then(async res => {
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error('Server returned non-JSON response:', text);
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, 'text/html');
+          const title = doc.querySelector('title');
+          const exceptionMessage = doc.querySelector('.exception-message') || doc.querySelector('.message') || doc.querySelector('h1') || title;
+          let errMsg = exceptionMessage ? exceptionMessage.innerText.trim() : 'Unknown HTML Error';
+          
+          if (errMsg.length > 250) {
+            errMsg = errMsg.substring(0, 250) + '...';
+          }
+          
+          alert('Server Error (500):\n' + errMsg);
+          throw new Error('Server returned non-JSON: ' + errMsg);
+        }
+        return data;
+      })
       .then(data => {
         if (!data.success) {
           console.error('Failed to save upload:', data.message);
-          if (window.location.hostname.includes('vercel.app')) {
-            alert('Gagal menyimpan hasil ke database Admin: ' + data.message);
-          }
+          alert('Gagal menyimpan hasil ke database Admin: ' + data.message);
         } else {
           console.log('Upload saved to backend Laravel:', data);
         }
       })
       .catch(err => {
         console.error('Failed to log upload to Laravel backend:', err);
-        if (window.location.hostname.includes('vercel.app')) {
-          alert('Gagal terhubung ke database Laravel. Silakan periksa konsol browser Anda.');
-        }
       });
     }
 
