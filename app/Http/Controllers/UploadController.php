@@ -45,8 +45,13 @@ class UploadController extends Controller
             $file = $request->file('image');
             $originalName = $file->getClientOriginalName();
             
-            // Create uploads folder inside public folder if not exists
+            // Create uploads folder
             $uploadPath = public_path('uploads');
+            $isVercel = env('RUNNING_ON_VERCEL') || env('VERCEL') || isset($_SERVER['VERCEL']);
+            if ($isVercel) {
+                $uploadPath = '/tmp/uploads';
+            }
+
             if (!File::exists($uploadPath)) {
                 File::makeDirectory($uploadPath, 0755, true);
             }
@@ -87,8 +92,9 @@ class UploadController extends Controller
     {
         $upload = Upload::findOrFail($id);
         
-        // Remove physical file from public/uploads
-        $filePath = public_path('uploads/' . $upload->filename);
+        // Remove physical file
+        $isVercel = env('RUNNING_ON_VERCEL') || env('VERCEL') || isset($_SERVER['VERCEL']);
+        $filePath = ($isVercel ? '/tmp/uploads/' : public_path('uploads/')) . $upload->filename;
         if (File::exists($filePath)) {
             File::delete($filePath);
         }
