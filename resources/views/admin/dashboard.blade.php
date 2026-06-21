@@ -228,6 +228,8 @@
                           <span class="font-mono font-semibold text-slate-400">-</span>
                         @endif
                       </p>
+                      <p><span class="font-semibold text-slate-500 dark:text-cyberGray">Waktu Pindai:</span> <span class="font-bold text-emerald-500 dark:text-emerald-400">{{ $upload->created_at->setTimezone('Asia/Jakarta')->format('d M Y - H:i:s') }} WIB</span></p>
+                      <p><span class="font-semibold text-slate-500 dark:text-cyberGray">Penyimpanan:</span> <span class="font-bold text-slate-700 dark:text-slate-200">{{ filter_var($upload->filename, FILTER_VALIDATE_URL) ? 'Cloud (ImgBB)' : 'Penyimpanan Lokal' }}</span></p>
                     </div>
                   </td>
 
