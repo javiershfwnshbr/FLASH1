@@ -62,7 +62,7 @@ class UploadController extends Controller
                 if ($apiKey) {
                     // Upload to ImgBB cloud storage
                     $base64Image = base64_encode(file_get_contents($file->getRealPath()));
-                    $response = \Illuminate\Support\Facades\Http::asForm()->post('https://api.imgbb.com/1/upload', [
+                    $response = \Illuminate\Support\Facades\Http::withoutVerifying()->asForm()->post('https://api.imgbb.com/1/upload', [
                         'key' => $apiKey,
                         'image' => $base64Image,
                     ]);
