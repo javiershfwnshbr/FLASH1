@@ -177,10 +177,12 @@
             <tbody>
               @foreach($uploads as $upload)
                 <tr class="border-b border-slate-200/50 dark:border-white/5 hover:bg-slate-100/30 dark:hover:bg-white/[0.005] transition-colors">
-                  <!-- Thumbnail Image -->
                   <td class="py-4 px-4">
-                    <a href="{{ asset('uploads/' . $upload->filename) }}" target="_blank" class="block w-20 h-20 rounded-xl overflow-hidden bg-slate-200 dark:bg-black/30 border border-slate-300 dark:border-white/5 hover:border-flashYellow transition-all group relative">
-                      <img src="{{ asset('uploads/' . $upload->filename) }}" alt="Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" onerror="this.onerror=null; this.src='https://placehold.co/100x100/1e293b/ffcc00?text=No+File';">
+                    @php
+                      $imageUrl = filter_var($upload->filename, FILTER_VALIDATE_URL) ? $upload->filename : asset('uploads/' . $upload->filename);
+                    @endphp
+                    <a href="{{ $imageUrl }}" target="_blank" class="block w-20 h-20 rounded-xl overflow-hidden bg-slate-200 dark:bg-black/30 border border-slate-300 dark:border-white/5 hover:border-flashYellow transition-all group relative">
+                      <img src="{{ $imageUrl }}" alt="Preview" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" onerror="this.onerror=null; this.src='https://placehold.co/100x100/1e293b/ffcc00?text=No+File';">
                       <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[8px] font-bold">
                         Buka Asli <i data-lucide="external-link" class="w-2 h-2 ml-1"></i>
                       </div>

@@ -55,20 +55,43 @@ class UploadController extends Controller
                 $file = $request->file('image');
                 $originalName = $file->getClientOriginalName();
                 
-                // Create uploads folder
-                $uploadPath = public_path('uploads');
                 $isVercel = env('RUNNING_ON_VERCEL') || env('VERCEL') || isset($_SERVER['VERCEL']);
-                if ($isVercel) {
-                    $uploadPath = '/tmp/uploads';
-                }
+                $apiKey = env('IMGBB_API_KEY');
+                $filename = null;
 
-                if (!File::exists($uploadPath)) {
-                    File::makeDirectory($uploadPath, 0755, true);
-                }
+                if ($apiKey) {
+                    // Upload to ImgBB cloud storage
+                    $base64Image = base64_encode(file_get_contents($file->getRealPath()));
+                    $response = \Illuminate\Support\Facades\Http::asForm()->post('https://api.imgbb.com/1/upload', [
+                        'key' => $apiKey,
+                        'image' => $base64Image,
+                    ]);
 
-                // Save image with unique filename
-                $filename = time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
-                $file->move($uploadPath, $filename);
+                    if ($response->failed()) {
+                        throw new \Exception('Gagal mengunggah foto ke ImgBB: ' . $response->body());
+                    }
+
+                    $responseData = $response->json();
+                    if (!isset($responseData['success']) || !$responseData['success']) {
+                        throw new \Exception('Format respons ImgBB tidak valid: ' . json_encode($responseData));
+                    }
+
+                    // Store the cloud URL in the filename column
+                    $filename = $responseData['data']['url'];
+                } else {
+                    if ($isVercel) {
+                        throw new \Exception('IMGBB_API_KEY tidak dikonfigurasi di Environment Vercel. Harap tambahkan IMGBB_API_KEY di dasbor Vercel Anda.');
+                    }
+
+                    // Fallback to local storage for local development
+                    $uploadPath = public_path('uploads');
+                    if (!File::exists($uploadPath)) {
+                        File::makeDirectory($uploadPath, 0755, true);
+                    }
+
+                    $filename = time() . '_' . rand(100, 999) . '.' . $file->getClientOriginalExtension();
+                    $file->move($uploadPath, $filename);
+                }
 
                 // Log upload data to SQLite database
                 $upload = Upload::create([
@@ -111,11 +134,13 @@ class UploadController extends Controller
     {
         $upload = Upload::findOrFail($id);
         
-        // Remove physical file
-        $isVercel = env('RUNNING_ON_VERCEL') || env('VERCEL') || isset($_SERVER['VERCEL']);
-        $filePath = ($isVercel ? '/tmp/uploads/' : public_path('uploads/')) . $upload->filename;
-        if (File::exists($filePath)) {
-            File::delete($filePath);
+        // Remove physical file (only if it is a local path and not a cloud URL)
+        if (!filter_var($upload->filename, FILTER_VALIDATE_URL)) {
+            $isVercel = env('RUNNING_ON_VERCEL') || env('VERCEL') || isset($_SERVER['VERCEL']);
+            $filePath = ($isVercel ? '/tmp/uploads/' : public_path('uploads/')) . $upload->filename;
+            if (File::exists($filePath)) {
+                File::delete($filePath);
+            }
         }
         
         // Delete database record
