@@ -35,7 +35,9 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            if (config('database.default') === 'sqlite') {
+            $dbConnection = config('database.default');
+
+            if ($dbConnection === 'sqlite') {
                 // Force database path to /tmp/database.sqlite on Vercel to bypass read-only filesystem
                 $dbPath = '/tmp/database.sqlite';
                 config(['database.connections.sqlite.database' => $dbPath]);
@@ -43,16 +45,16 @@ class AppServiceProvider extends ServiceProvider
                 if (!file_exists($dbPath)) {
                     touch($dbPath);
                 }
-                
-                try {
-                    // Check if tables exist, if not, migrate them automatically
-                    if (!\Illuminate\Support\Facades\Schema::hasTable('uploads') || !\Illuminate\Support\Facades\Schema::hasTable('visitors')) {
-                        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-                        \Illuminate\Support\Facades\Log::info('Vercel SQLite: Database created and migrated successfully.');
-                    }
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Vercel SQLite Migration Failed: ' . $e->getMessage());
+            }
+
+            try {
+                // Auto-migrate tables for any connection (SQLite, MySQL, PGSQL) if they don't exist yet
+                if (!\Illuminate\Support\Facades\Schema::hasTable('uploads') || !\Illuminate\Support\Facades\Schema::hasTable('visitors')) {
+                    \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                    \Illuminate\Support\Facades\Log::info('Vercel Database auto-migration completed.');
                 }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Vercel Database auto-migration failed: ' . $e->getMessage());
             }
         }
     }
