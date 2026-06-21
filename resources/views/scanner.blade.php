@@ -1423,15 +1423,14 @@
             errMsg = errMsg.substring(0, 250) + '...';
           }
           
-          alert('Server Error (500):\n' + errMsg);
+          console.error('Server Error (500):', errMsg);
           throw new Error('Server returned non-JSON: ' + errMsg);
         }
         return data;
       })
       .then(data => {
         if (!data.success) {
-          console.error('Failed to save upload:', data.message);
-          alert('Gagal menyimpan hasil ke database Admin: ' + data.message);
+          console.error('Gagal menyimpan hasil ke database Admin:', data.message);
         } else {
           console.log('Upload saved to backend Laravel:', data);
         }

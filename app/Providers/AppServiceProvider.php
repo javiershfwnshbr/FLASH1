@@ -42,13 +42,16 @@ class AppServiceProvider extends ServiceProvider
 
                 if (!file_exists($dbPath)) {
                     touch($dbPath);
-                    
-                    try {
+                }
+                
+                try {
+                    // Check if tables exist, if not, migrate them automatically
+                    if (!\Illuminate\Support\Facades\Schema::hasTable('uploads') || !\Illuminate\Support\Facades\Schema::hasTable('visitors')) {
                         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
                         \Illuminate\Support\Facades\Log::info('Vercel SQLite: Database created and migrated successfully.');
-                    } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Vercel SQLite Migration Failed: ' . $e->getMessage());
                     }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Vercel SQLite Migration Failed: ' . $e->getMessage());
                 }
             }
         }
